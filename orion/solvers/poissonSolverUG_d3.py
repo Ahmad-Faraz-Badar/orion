@@ -74,6 +74,9 @@ hxhyhz = [hx2[i]*hy2[i]*hz2[i] for i in range(gv.VDepth + 1)]
 # Factor in denominator of Gauss-Seidel iterations
 gsFactor = [1.0/(2.0*(hyhz[i] + hzhx[i] + hxhy[i])) for i in range(gv.VDepth + 1)]
 
+# Factor in denominator of Jacobi iterations
+jFactor3D = [2.0*(1/hx2[i] + 1/hy2[i] + 1/hz2[i]) for i in range(gv.VDepth + 1)]
+
 # Maximum number of iterations while solving at coarsest level
 maxCount = 10*N[-1][0]*N[-1][1]*N[-1][2]
 
@@ -164,6 +167,67 @@ def v_cycle():
         # Post-smoothing
         smooth(gv.pstSm)
 
+def vectorJacobi3D(p, rhs):
+    #Performs 1 iteration of the Jacobi method
+    #Vectorized Form
+    
+    # p is n x n x n
+    # r is n x n x n
+    #Assumes p has boundaries included while rhs does not
+    
+    #Making rhs the same shape as p
+    r0=rhs.copy()
+    r = np.zeros((r0.shape[0]+2, r0.shape[1]+2, r0.shape[2]+2))
+    r[1:-1, 1:-1, 1:-1] += r0
+    
+    #rz = nxnxn array to which everything on the RHS of the Jacobi method is added
+    rz = np.zeros(r.shape)
+    
+    #Adding p[i+1, j, k] and p[i-1, j, k] contribution
+    rz[:-1, :, :] = rz[:-1, :, :] + p[1:, :, :]*(1/hx2[vLev])
+    rz[1:, :, :] = rz[1:, :, :] + p[:-1, :, :]*(1/hx2[vLev])
+    
+    #Adding p[i, j+1, k] and p[i, j-1, k] contribution
+    rz[:, :-1, :] = rz[:, :-1, :] + p[:, 1:, :]*(1/hy2[vLev])
+    rz[:, 1:, :] = rz[:, 1:, :] + p[:, :-1, :]*(1/hy2[vLev])
+    
+    #Adding p[i, j, k+1] and p[i-1, j, k-1] contribution
+    rz[:, :, :-1] = rz[:, :, :-1] + p[:, :, 1:]*(1/hz2[vLev])
+    rz[:, :, 1:] = rz[:, :, 1:] + p[:, :, :-1]*(1/hz2[vLev])
+    
+    #Adding r contribution
+    rz = rz - r
+
+    p = rz/jFactor3D[vLev]
+    
+    return p[1:-1, 1:-1, 1:-1]
+
+def vectorJacobi3D_RBGS(p, rhs):
+    
+    p_red = p.copy()
+    r0 = rhs.copy()
+    rhs0 = np.zeros((r0.shape[0]+2, r0.shape[1]+2, r0.shape[2]+2))
+    
+    r_red = np.zeros((r0.shape[0]+2, r0.shape[1]+2, r0.shape[2]+2))
+    r_red[1:-1, 1:-1, 1:-1] += r0
+    
+    for i in np.arange(p.shape[0]):
+        for j in np.arange(p.shape[1]):
+            for k in np.arange(p.shape[2]):
+                if (i+j+k)%2 == 0:
+                    p_red[i, j, k]=0
+                    r_red[i, j, k]=0
+    
+    p_black = p - p_red
+    r_black = rhs0 - r_red
+    
+    p_red[1:-1, 1:-1, 1:-1] = vectorJacobi3D(p_red, r_red[1:-1, 1:-1, 1:-1])
+    
+    p_black[1:-1, 1:-1, 1:-1] = vectorJacobi3D(p_black, r_black[1:-1, 1:-1, 1:-1])
+    
+    p = p_red + p_black
+    
+    return p[1:-1, 1:-1, 1:-1]
 
 # Smoothens the solution sCount times using Gauss-Seidel smoother
 def smooth(sCount):
@@ -176,7 +240,7 @@ def smooth(sCount):
     n = N[vLev]
     for iCnt in range(sCount):
         imposeBC(pData[vLev])
-
+        """
         # Gauss-Seidel smoothing
         for i in range(1, n[0]+1):
             for j in range(1, n[1]+1):
@@ -185,7 +249,13 @@ def smooth(sCount):
                                             hzhx[vLev]*(pData[vLev][i, j+1, k] + pData[vLev][i, j-1, k]) +
                                             hxhy[vLev]*(pData[vLev][i, j, k+1] + pData[vLev][i, j, k-1]) -
                                           hxhyhz[vLev]*rData[vLev][i-1, j-1, k-1]) * gsFactor[vLev]
-
+        """
+        #Using Jacobi Method
+        pData[vLev][1:-1, 1:-1, 1:-1] = vectorJacobi3D(pData[vLev], rData[vLev])
+        
+        #Using RBGS
+        #pData[vLev][1:-1, 1:-1, 1:-1] = vectorJacobi3D_RBGS(pData[vLev], rData[vLev])
+        
     imposeBC(pData[vLev])
 
 
