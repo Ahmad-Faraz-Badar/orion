@@ -99,10 +99,10 @@ VDepth = 4
 vcCnt = 5
 
 # Number of iterations during pre-smoothing
-preSm = 3
+preSm = 5
 
 # Number of iterations during post-smoothing
-pstSm = 3
+pstSm = 5
 
 ######################################## END OF USER PARAMETERS ####################################
 
