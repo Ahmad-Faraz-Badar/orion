@@ -200,34 +200,82 @@ def vectorJacobi3D(p, rhs):
 
     p = rz/jFactor3D[vLev]
     
-    return p[1:-1, 1:-1, 1:-1]
+    #return p[1:-1, 1:-1, 1:-1]
+    return p
 
-def vectorJacobi3D_RBGS(p, rhs):
+def vectorJacobi3D3RedUpdate(p, r, ic1, ic2, ia1, ia2):
     
-    p_red = p.copy()
-    r0 = rhs.copy()
-    rhs0 = np.zeros((r0.shape[0]+2, r0.shape[1]+2, r0.shape[2]+2))
+    p[ic1, ic1, ic1] = (-r[ic1, ic1, ic1] + \
+                        (p[ia1, ic1, ic1][1:, :, :] + p[ia1, ic1, ic1][:-1, :, :])*(1/hx2[vLev]) + \
+                        (p[ic1, ia1, ic1][:, 1:, :] + p[ic1, ia1, ic1][:, :-1, :])*(1/hy2[vLev]) + \
+                        (p[ic1, ic1, ia1][:, :, 1:] + p[ic1, ic1, ia1][:, :, :-1])*(1/hz2[vLev]))* \
+                        (1/jFactor3D[vLev])
     
-    r_red = np.zeros((r0.shape[0]+2, r0.shape[1]+2, r0.shape[2]+2))
-    r_red[1:-1, 1:-1, 1:-1] += r0
+    p[ic1, ic2, ic2] = (-r[ic1, ic2, ic2] + \
+                        (p[ia1, ic2, ic2][1:, :, :] + p[ia1, ic2, ic2][:-1, :, :])*(1/hx2[vLev]) + \
+                        (p[ic1, ia2, ic2][:, 1:, :] + p[ic1, ia2, ic2][:, :-1, :])*(1/hy2[vLev]) + \
+                        (p[ic1, ic2, ia2][:, :, 1:] + p[ic1, ic2, ia2][:, :, :-1])*(1/hz2[vLev]))* \
+                        (1/jFactor3D[vLev])
     
-    for i in np.arange(p.shape[0]):
-        for j in np.arange(p.shape[1]):
-            for k in np.arange(p.shape[2]):
-                if (i+j+k)%2 == 0:
-                    p_red[i, j, k]=0
-                    r_red[i, j, k]=0
+    p[ic2, ic1, ic2] = (-r[ic2, ic1, ic2] + \
+                        (p[ia2, ic1, ic2][1:, :, :] + p[ia2, ic1, ic2][:-1, :, :])*(1/hx2[vLev]) + \
+                        (p[ic2, ia1, ic2][:, 1:, :] + p[ic2, ia1, ic2][:, :-1, :])*(1/hy2[vLev]) + \
+                        (p[ic2, ic1, ia2][:, :, 1:] + p[ic2, ic1, ia2][:, :, :-1])*(1/hz2[vLev]))* \
+                        (1/jFactor3D[vLev])
     
-    p_black = p - p_red
-    r_black = rhs0 - r_red
+    p[ic2, ic2, ic1] = (-r[ic2, ic2, ic1] + \
+                        (p[ia2, ic2, ic1][1:, :, :] + p[ia2, ic2, ic1][:-1, :, :])*(1/hx2[vLev]) + \
+                        (p[ic2, ia2, ic1][:, 1:, :] + p[ic2, ia2, ic1][:, :-1, :])*(1/hy2[vLev]) + \
+                        (p[ic2, ic2, ia1][:, :, 1:] + p[ic2, ic2, ia1][:, :, :-1])*(1/hz2[vLev]))* \
+                        (1/jFactor3D[vLev])
+    return p
+
+def vectorJacobi3D3BlackUpdate(p, r, ic1, ic2, ia1, ia2):
     
-    p_red[1:-1, 1:-1, 1:-1] = vectorJacobi3D(p_red, r_red[1:-1, 1:-1, 1:-1])
+    p[ic2, ic2, ic2] = (-r[ic2, ic2, ic2] + \
+                        (p[ia2, ic2, ic2][1:, :, :] + p[ia2, ic2, ic2][:-1, :, :])*(1/hx2[vLev]) + \
+                        (p[ic2, ia2, ic2][:, 1:, :] + p[ic2, ia2, ic2][:, :-1, :])*(1/hy2[vLev]) + \
+                        (p[ic2, ic2, ia2][:, :, 1:] + p[ic2, ic2, ia2][:, :, :-1])*(1/hz2[vLev]))* \
+                        (1/jFactor3D[vLev])
     
-    p_black[1:-1, 1:-1, 1:-1] = vectorJacobi3D(p_black, r_black[1:-1, 1:-1, 1:-1])
+    p[ic2, ic1, ic1] = (-r[ic2, ic1, ic1] + \
+                        (p[ia2, ic1, ic1][1:, :, :] + p[ia2, ic1, ic1][:-1, :, :])*(1/hx2[vLev]) + \
+                        (p[ic2, ia1, ic1][:, 1:, :] + p[ic2, ia1, ic1][:, :-1, :])*(1/hy2[vLev]) + \
+                        (p[ic2, ic1, ia1][:, :, 1:] + p[ic2, ic1, ia1][:, :, :-1])*(1/hz2[vLev]))* \
+                        (1/jFactor3D[vLev])
     
-    p = p_red + p_black
+    p[ic1, ic2, ic1] = (-r[ic1, ic2, ic1] + \
+                        (p[ia1, ic2, ic1][1:, :, :] + p[ia1, ic2, ic1][:-1, :, :])*(1/hx2[vLev]) + \
+                        (p[ic1, ia2, ic1][:, 1:, :] + p[ic1, ia2, ic1][:, :-1, :])*(1/hy2[vLev]) + \
+                        (p[ic1, ic2, ia1][:, :, 1:] + p[ic1, ic2, ia1][:, :, :-1])*(1/hz2[vLev]))* \
+                        (1/jFactor3D[vLev])
     
-    return p[1:-1, 1:-1, 1:-1]
+    p[ic1, ic1, ic2] = (-r[ic1, ic1, ic2] + \
+                        (p[ia1, ic1, ic2][1:, :, :] + p[ia1, ic1, ic2][:-1, :, :])*(1/hx2[vLev]) + \
+                        (p[ic1, ia1, ic2][:, 1:, :] + p[ic1, ia1, ic2][:, :-1, :])*(1/hy2[vLev]) + \
+                        (p[ic1, ic1, ia2][:, :, 1:] + p[ic1, ic1, ia2][:, :, :-1])*(1/hz2[vLev]))* \
+                        (1/jFactor3D[vLev])
+
+    return p
+
+def vectorJacobi3D_RBGS(p, r):
+    #Performs 1 iteration of the Jacobi method
+    #Vectorized Form
+    
+    # p is n x n x n
+    # r is n x n x n
+    #Assumes p and rhs have boundaries 
+  
+    ic1 = slice(1, -1, 2)
+    ic2 = slice(2, -2, 2)
+    ia1 = slice(0, None, 2)  
+    ia2 = slice(1, -1, 2)
+    #Red
+    p = vectorJacobi3D3RedUpdate(p, r, ic1, ic2, ia1, ia2)
+    #Black
+    p = vectorJacobi3D3BlackUpdate(p, r, ic1, ic2, ia1, ia2)
+    
+    return p
 
 # Smoothens the solution sCount times using Gauss-Seidel smoother
 def smooth(sCount):
@@ -251,10 +299,18 @@ def smooth(sCount):
                                           hxhyhz[vLev]*rData[vLev][i-1, j-1, k-1]) * gsFactor[vLev]
         """
         #Using Jacobi Method
-        pData[vLev][1:-1, 1:-1, 1:-1] = vectorJacobi3D(pData[vLev], rData[vLev])
+        #pData[vLev][1:-1, 1:-1, 1:-1] = vectorJacobi3D(pData[vLev], rData[vLev])
+        
+        #Using Jacobi Method (full output)
+        #pData[vLev] = vectorJacobi3D(pData[vLev], rData[vLev])
         
         #Using RBGS
-        #pData[vLev][1:-1, 1:-1, 1:-1] = vectorJacobi3D_RBGS(pData[vLev], rData[vLev])
+        #Making rhs the same shape as p
+        r0 = rData[vLev].copy()
+        r = np.zeros((r0.shape[0]+2, r0.shape[1]+2, r0.shape[2]+2))
+        r[1:-1, 1:-1, 1:-1] += r0
+        
+        pData[vLev] = vectorJacobi3D_RBGS(pData[vLev],r)
         
     imposeBC(pData[vLev])
 

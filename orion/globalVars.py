@@ -44,7 +44,7 @@ planar = False
 testPoisson = True
 
 # Set the number of processors for parallel computing (under development) with multiprocessing module
-nProcs = 8
+nProcs = 1
 
 # Choose the grid sizes as indices from below list so that there are 2^n + 2 grid points
 # [2, 4, 6, 10, 18, 34, 66, 130, 258, 514, 1026, 2050]
