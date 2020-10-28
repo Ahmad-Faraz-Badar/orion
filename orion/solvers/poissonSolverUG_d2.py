@@ -59,6 +59,9 @@ hzhx = [hx2[i]*hz2[i] for i in range(gv.VDepth + 1)]
 # Factor in denominator of Gauss-Seidel iterations
 gsFactor = [1.0/(2.0*(hz2[i] +  hx2[i])) for i in range(gv.VDepth + 1)]
 
+# Factor in denominator of Jacobi iterations
+jFactor2D = [2.0*(1/hx2[i] + 1/hz2[i]) for i in range(gv.VDepth + 1)]
+
 # Maximum number of iterations while solving at coarsest level
 maxCount = 10*N[-1][0]*N[-1][1]
 
@@ -149,6 +152,84 @@ def v_cycle():
         # Post-smoothing
         smooth(gv.pstSm)
 
+def vectorJacobi2D(p, rhs):
+    #Performs 1 iteration of the Jacobi method
+    #Vectorized Form
+    
+    # p is n x n x n
+    # r is n x n x n
+    #Assumes p has boundaries included while rhs does not
+    
+    #Making rhs the same shape as p
+    r0=rhs.copy()
+    r = np.zeros((r0.shape[0]+2, r0.shape[1]+2))
+    r[1:-1, 1:-1] += r0
+    
+    #rz = nxnxn array to which everything on the RHS of the Jacobi method is added
+    rz = np.zeros(r.shape)
+    
+    #Adding p[i+1, j, k] and p[i-1, j, k] contribution
+    rz[:-1, :] = rz[:-1, :] + p[1:, :]*(1/hx2[vLev])
+    rz[1:, :] = rz[1:, :] + p[:-1, :]*(1/hx2[vLev])
+    
+    #Adding p[i, j, k+1] and p[i-1, j, k-1] contribution
+    rz[:, :-1] = rz[:, :-1] + p[:, 1:]*(1/hz2[vLev])
+    rz[:, 1:] = rz[:, 1:] + p[:, :-1]*(1/hz2[vLev])
+    
+    #Adding r contribution
+    rz = rz - r
+
+    p = rz/jFactor2D[vLev]
+    
+    #return p[1:-1, 1:-1, 1:-1]
+    return p
+
+def vectorJacobi2D2RedUpdate(p, r, ic1, ic2, ia1, ia2):
+    
+    p[ic1, ic1] = (-r[ic1, ic1] + \
+                        (p[ia1, ic1][1:, :] + p[ia1, ic1][:-1, :])*(1/hx2[vLev]) + \
+                        (p[ic1, ia1][:, 1:] + p[ic1, ia1][:, :-1])*(1/hz2[vLev]))* \
+                        (1/jFactor2D[vLev])
+    
+    p[ic2, ic2] = (-r[ic2, ic2] + \
+                        (p[ia2, ic2][1:, :] + p[ia2, ic2][:-1, :])*(1/hx2[vLev]) + \
+                        (p[ic2, ia2][:, 1:] + p[ic2, ia2][:, :-1])*(1/hz2[vLev]))* \
+                        (1/jFactor2D[vLev])
+    return p
+
+def vectorJacobi2D2BlackUpdate(p, r, ic1, ic2, ia1, ia2):
+    
+    p[ic2, ic1] = (-r[ic2, ic1] + \
+                        (p[ia2, ic1][1:, :] + p[ia2, ic1][:-1, :])*(1/hx2[vLev]) + \
+                        (p[ic2, ia1][:, 1:] + p[ic2, ia1][:, :-1])*(1/hz2[vLev]))* \
+                        (1/jFactor2D[vLev])
+    
+    p[ic1, ic2] = (-r[ic1, ic2] + \
+                        (p[ia1, ic2][1:, :] + p[ia1, ic2][:-1, :])*(1/hx2[vLev]) + \
+                        (p[ic1, ia2][:, 1:] + p[ic1, ia2][:, :-1])*(1/hz2[vLev]))* \
+                        (1/jFactor2D[vLev])
+
+    return p
+
+def vectorJacobi2D_RBGS(p, r):
+    #Performs 1 iteration of the Jacobi method
+    #Vectorized Form
+    
+    # p is n x n
+    # r is n x n
+    #Assumes p and rhs have boundaries 
+  
+    ic1 = slice(1, -1, 2)
+    ic2 = slice(2, -2, 2)
+    ia1 = slice(0, None, 2)  
+    ia2 = slice(1, -1, 2)
+    #Red
+    p = vectorJacobi2D2RedUpdate(p, r, ic1, ic2, ia1, ia2)
+    #Black
+    p = vectorJacobi2D2BlackUpdate(p, r, ic1, ic2, ia1, ia2)
+    
+    return p
+
 
 # Smoothens the solution sCount times using Gauss-Seidel smoother
 def smooth(sCount):
@@ -161,14 +242,27 @@ def smooth(sCount):
     n = N[vLev]
     for iCnt in range(sCount):
         imposeBC(pData[vLev])
-
-        # Gauss-Seidel smoothing
-        for i in range(1, n[0]+1):
-            for j in range(1, n[1]+1):
-                pData[vLev][i, j] = (hz2[vLev]*(pData[vLev][i+1, j] + pData[vLev][i-1, j]) +
-                                     hx2[vLev]*(pData[vLev][i, j+1] + pData[vLev][i, j-1]) -
-                                     hzhx[vLev]*rData[vLev][i-1, j-1]) * gsFactor[vLev]
-
+        
+        if gv.solveMethod == "MG-GS":
+            # Gauss-Seidel smoothing
+            for i in range(1, n[0]+1):
+                for j in range(1, n[1]+1):
+                    pData[vLev][i, j] = (hz2[vLev]*(pData[vLev][i+1, j] + pData[vLev][i-1, j]) +
+                                         hx2[vLev]*(pData[vLev][i, j+1] + pData[vLev][i, j-1]) -
+                                         hzhx[vLev]*rData[vLev][i-1, j-1]) * gsFactor[vLev]
+          
+        if gv.solveMethod == "MG-J":
+            #Using Jacobi Method (full output)
+            pData[vLev] = vectorJacobi2D(pData[vLev], rData[vLev])
+         
+        if gv.solveMethod == "MG-RBGS":
+            #Using RBGS
+            #Making rhs the same shape as p
+            r0 = rData[vLev].copy()
+            r = np.zeros((r0.shape[0]+2, r0.shape[1]+2))
+            r[1:-1, 1:-1] += r0    
+            pData[vLev] = vectorJacobi2D_RBGS(pData[vLev],r)
+        
     imposeBC(pData[vLev])
 
 

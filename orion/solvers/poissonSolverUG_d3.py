@@ -288,30 +288,31 @@ def smooth(sCount):
     n = N[vLev]
     for iCnt in range(sCount):
         imposeBC(pData[vLev])
-        """
-        # Gauss-Seidel smoothing
-        for i in range(1, n[0]+1):
-            for j in range(1, n[1]+1):
-                for k in range(1, n[2]+1):
-                    pData[vLev][i, j, k] = (hyhz[vLev]*(pData[vLev][i+1, j, k] + pData[vLev][i-1, j, k]) +
-                                            hzhx[vLev]*(pData[vLev][i, j+1, k] + pData[vLev][i, j-1, k]) +
-                                            hxhy[vLev]*(pData[vLev][i, j, k+1] + pData[vLev][i, j, k-1]) -
-                                          hxhyhz[vLev]*rData[vLev][i-1, j-1, k-1]) * gsFactor[vLev]
-        """
-        #Using Jacobi Method
-        #pData[vLev][1:-1, 1:-1, 1:-1] = vectorJacobi3D(pData[vLev], rData[vLev])
         
-        #Using Jacobi Method (full output)
-        #pData[vLev] = vectorJacobi3D(pData[vLev], rData[vLev])
+        if gv.solveMethod == "MG-GS":
+            # Gauss-Seidel smoothing
+            for i in range(1, n[0]+1):
+                for j in range(1, n[1]+1):
+                    for k in range(1, n[2]+1):
+                        pData[vLev][i, j, k] = (hyhz[vLev]*(pData[vLev][i+1, j, k] + pData[vLev][i-1, j, k]) +
+                                                 hzhx[vLev]*(pData[vLev][i, j+1, k] + pData[vLev][i, j-1, k]) +
+                                                 hxhy[vLev]*(pData[vLev][i, j, k+1] + pData[vLev][i, j, k-1]) -
+                                                 hxhyhz[vLev]*rData[vLev][i-1, j-1, k-1]) * gsFactor[vLev]
         
-        #Using RBGS
-        #Making rhs the same shape as p
-        r0 = rData[vLev].copy()
-        r = np.zeros((r0.shape[0]+2, r0.shape[1]+2, r0.shape[2]+2))
-        r[1:-1, 1:-1, 1:-1] += r0
+        if gv.solveMethod == "MG-J":
+            #Using Jacobi Method
+            #pData[vLev][1:-1, 1:-1, 1:-1] = vectorJacobi3D(pData[vLev], rData[vLev])
+            #Using Jacobi Method (full output)
+            pData[vLev] = vectorJacobi3D(pData[vLev], rData[vLev])
         
-        pData[vLev] = vectorJacobi3D_RBGS(pData[vLev],r)
-        
+        if gv.solveMethod == "MG-RBGS":
+            #Using RBGS
+            #Making rhs the same shape as p
+            r0 = rData[vLev].copy()
+            r = np.zeros((r0.shape[0]+2, r0.shape[1]+2, r0.shape[2]+2))
+            r[1:-1, 1:-1, 1:-1] += r0
+            pData[vLev] = vectorJacobi3D_RBGS(pData[vLev],r)
+    
     imposeBC(pData[vLev])
 
 

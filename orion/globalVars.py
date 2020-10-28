@@ -38,7 +38,7 @@ import numpy as np
 
 # Set whether the simulation is going to be 2D or 3D
 # If 2D, set the below flag to True
-planar = False
+planar = True
 
 # Set below flag to True if the Poisson solver is being tested
 testPoisson = True
@@ -92,17 +92,25 @@ solveSol = False
 # Tolerance value in Jacobi iterations
 tolerance = 1.0e-6
 
+#Solution methods:
+# 0: Multigrid-Guass-Seidel
+# 1: Multigrid-Jacobi
+# 2: Multigrid-Red-Black Guass-Seidel
+solveMethods = ['MG-GS', 'MG-J', 'MG-RBGS']
+solveMethod = 2
+solveMethod = solveMethods[solveMethod]
+
 # Depth of each V-cycle in multigrid
 VDepth = 4
 
 # Number of V-cycles to be computed
-vcCnt = 5
+vcCnt = 14
 
 # Number of iterations during pre-smoothing
-preSm = 5
+preSm = 2
 
 # Number of iterations during post-smoothing
-pstSm = 5
+pstSm = 2
 
 ######################################## END OF USER PARAMETERS ####################################
 

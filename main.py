@@ -72,10 +72,9 @@ def main():
 
     tEnd = time.process_time()
     tElap = tEnd - tStart
-
+    
     print("Time elapsed = ", tElap)
     print("Simulation completed")
-
 
 ####################################################################################################
 
@@ -87,7 +86,9 @@ def runMGTest():
         mgRHS = np.ones((fs.grid.L + 2, fs.grid.M + 2, fs.grid.N + 2))
 
     mgLHS = np.zeros_like(mgRHS)
-    fs.ps.multigrid(mgRHS, mgLHS)
+    
+    if gv.solveMethod[0:2] == 'MG':
+        fs.ps.multigrid(mgRHS, mgLHS)
 
 
 ####################################################################################################

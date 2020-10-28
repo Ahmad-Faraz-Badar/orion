@@ -118,7 +118,8 @@ def euler():
                                 (V[1:L+1, 1:M+1, 1:N+1] - V[1:L+1, 0:M, 1:N+1])/grid.hy +
                                 (W[1:L+1, 1:M+1, 1:N+1] - W[1:L+1, 1:M+1, 0:N])/grid.hz)/gv.dt
 
-    ps.multigrid(Pp, rhs)
+    if gv.solveMethod[0:2] == 'MG':
+        ps.multigrid(Pp, rhs)
 
     # Add pressure correction.
     P = P + Pp
