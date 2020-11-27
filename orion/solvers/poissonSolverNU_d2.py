@@ -145,6 +145,70 @@ def v_cycle():
         # Post-smoothing
         smooth(gv.pstSm)
 
+def vectorJacobi2D2RedUpdate(p, r, ic1, ic2, ia1, ia2):
+    global hx2, hz2, hzhx
+    global xixx, xix2, ztzz, ztz2
+    
+    jFactor2D = 2*((xix2[vLev][ia1, ia1]/hx2[vLev]) + (ztz2[vLev][ia1, ia1]/hz2[vLev]))
+    p[ic1, ic1] = (-r[ia1, ia1] + \
+                        (p[ia1, ic1][1:, :] + p[ia1, ic1][:-1, :])*(xix2[vLev][ia1, ia1]/hx2[vLev]) + \
+                        (p[ia1, ic1][1:, :] - p[ia1, ic1][:-1, :])*(xixx[vLev][ia1, ia1]/(2*hx[vLev])) + \
+                        (p[ic1, ia1][:, 1:] + p[ic1, ia1][:, :-1])*(ztz2[vLev][ia1, ia1]/hz2[vLev]) + \
+                        (p[ic1, ia1][:, 1:] - p[ic1, ia1][:, :-1])*(ztzz[vLev][ia1, ia1]/(2*hz[vLev])))* \
+                        (1/jFactor2D)
+    
+    jFactor2D = 2*((xix2[vLev][ia2, ia2]/hx2[vLev]) + (ztz2[vLev][ia2, ia2]/hz2[vLev]))
+    p[ic2, ic2] = (-r[ia2, ia2] + \
+                        (p[ia2, ic2][1:, :] + p[ia2, ic2][:-1, :])*(xix2[vLev][ia2, ia2]/hx2[vLev]) + \
+                        (p[ia2, ic2][1:, :] - p[ia2, ic2][:-1, :])*(xixx[vLev][ia2, ia2]/(2*hx[vLev])) + \
+                        (p[ic2, ia2][:, 1:] + p[ic2, ia2][:, :-1])*(ztz2[vLev][ia2, ia2]/hz2[vLev]) + \
+                        (p[ic2, ia2][:, 1:] - p[ic2, ia2][:, :-1])*(ztzz[vLev][ia2, ia2]/(2*hz[vLev])))* \
+                        (1/jFactor2D)
+    return p
+
+def vectorJacobi2D2BlackUpdate(p, r, ic1, ic2, ia1, ia2):
+    global hx2, hz2, hzhx
+    global xixx, xix2, ztzz, ztz2
+    
+    jFactor2D = 2*((xix2[vLev][ia2, ia1]/hx2[vLev]) + (ztz2[vLev][ia2, ia1]/hz2[vLev]))
+    p[ic2, ic1] = (-r[ia2, ia1] + \
+                        (p[ia2, ic1][1:, :] + p[ia2, ic1][:-1, :])*(xix2[vLev][ia2, ia1]/hx2[vLev]) + \
+                        (p[ia2, ic1][1:, :] - p[ia2, ic1][:-1, :])*(xixx[vLev][ia2, ia1]/(2*hx[vLev])) + \
+                        (p[ic2, ia1][:, 1:] + p[ic2, ia1][:, :-1])*(ztz2[vLev][ia2, ia1]/hz2[vLev]) + \
+                        (p[ic2, ia1][:, 1:] - p[ic2, ia1][:, :-1])*(ztzz[vLev][ia2, ia1]/(2*hz[vLev])))* \
+                        (1/jFactor2D)
+    
+    jFactor2D = 2*((xix2[vLev][ia1, ia2]/hx2[vLev]) + (ztz2[vLev][ia1, ia2]/hz2[vLev]))
+    p[ic1, ic2] = (-r[ia1, ia2] + \
+                        (p[ia1, ic2][1:, :] + p[ia1, ic2][:-1, :])*(xix2[vLev][ia1, ia2]/hx2[vLev]) + \
+                        (p[ia1, ic2][1:, :] - p[ia1, ic2][:-1, :])*(xixx[vLev][ia1, ia2]/(2*hx[vLev])) + \
+                        (p[ic1, ia2][:, 1:] + p[ic1, ia2][:, :-1])*(ztz2[vLev][ia1, ia2]/hz2[vLev]) + \
+                        (p[ic1, ia2][:, 1:] - p[ic1, ia2][:, :-1])*(ztzz[vLev][ia1, ia2]/(2*hz[vLev])))* \
+                        (1/jFactor2D)
+
+    return p
+
+def vectorJacobi2D_RBGS(p, r):
+    #Performs 1 iteration of the Jacobi method
+    #Vectorized Form
+    global hx2, hz2, hzhx
+    global xixx, xix2, ztzz, ztz2
+    # p is n x n
+    # r is n x n
+    #Assumes p and rhs have boundaries 
+  
+    ic1 = slice(1, -1, 2)
+    ic2 = slice(2, -2, 2)
+    ia1 = slice(0, None, 2)  
+    ia2 = slice(1, -1, 2)
+    
+    
+    #Red
+    p = vectorJacobi2D2RedUpdate(p, r, ic1, ic2, ia1, ia2)
+    #Black
+    p = vectorJacobi2D2BlackUpdate(p, r, ic1, ic2, ia1, ia2)
+    
+    return p
 
 # Smoothens the solution sCount times using Gauss-Seidel smoother
 def smooth(sCount):
@@ -153,22 +217,26 @@ def smooth(sCount):
     global rData, pData
     global hx2, hz2, hzhx
     global xixx, xix2, ztzz, ztz2
-
+    
     n = N[vLev]
     for iCnt in range(sCount):
         imposeBC(pData[vLev])
-
-        # Gauss-Seidel smoothing
-        for i in range(1, n[0]+1):
-            for j in range(1, n[1]+1):
-                pData[vLev][i, j] = (
-                    hz2[vLev]*xix2[vLev][i-1]*(pData[vLev][i+1, j] + pData[vLev][i-1, j])*2.0 +
-                    hz2[vLev]*xixx[vLev][i-1]*(pData[vLev][i+1, j] - pData[vLev][i-1, j])*hx[vLev] +
-                    hx2[vLev]*ztz2[vLev][j-1]*(pData[vLev][i, j+1] + pData[vLev][i, j-1])*2.0 +
-                    hx2[vLev]*ztzz[vLev][j-1]*(pData[vLev][i, j+1] - pData[vLev][i, j-1])*hz[vLev] -
-                2.0*hzhx[vLev]*rData[vLev][i-1, j-1]) / \
-            (4.0*(hz2[vLev]*xix2[vLev][i-1] + hx2[vLev]*ztz2[vLev][j-1]))
-
+        
+        if gv.solveMethod == "MG-GS":
+            # Gauss-Seidel smoothing
+            for i in range(1, n[0]+1):
+                for j in range(1, n[1]+1):
+                    pData[vLev][i, j] = (
+                            hz2[vLev]*xix2[vLev][i-1]*(pData[vLev][i+1, j] + pData[vLev][i-1, j])*2.0 +
+                            hz2[vLev]*xixx[vLev][i-1]*(pData[vLev][i+1, j] - pData[vLev][i-1, j])*hx[vLev] +
+                            hx2[vLev]*ztz2[vLev][j-1]*(pData[vLev][i, j+1] + pData[vLev][i, j-1])*2.0 +
+                            hx2[vLev]*ztzz[vLev][j-1]*(pData[vLev][i, j+1] - pData[vLev][i, j-1])*hz[vLev] -
+                            2.0*hzhx[vLev]*rData[vLev][i-1, j-1]) / \
+                            (4.0*(hz2[vLev]*xix2[vLev][i-1] + hx2[vLev]*ztz2[vLev][j-1]))
+        
+        if gv.solveMethod == "MG-RBGS":
+            pData[vLev] = vectorJacobi2D_RBGS(pData[vLev],rData[vLev])
+        
     imposeBC(pData[vLev])
 
 
@@ -337,8 +405,19 @@ def initGrid():
     # Reshape arrays to make it easier to multiply with 3D arrays
     xixx = [x[:, np.newaxis] for x in xixx]
     xix2 = [x[:, np.newaxis] for x in xix2]
-
-
+    
+    ztzz = [x[:, np.newaxis] for x in ztzz]
+    ztz2 = [x[:, np.newaxis] for x in ztz2]
+    
+    if gv.solveMethod == "MG-RBGS":
+    #Reshaping arrays for RBGS
+        for i in range(len(rData)):
+            xixx[i] = (xixx[i]*np.ones(rData[i].shape))
+            xix2[i] = (xix2[i]*np.ones(rData[i].shape))
+            
+            ztzz[i] = (ztzz[i]*np.ones(rData[i].shape)).T
+            ztz2[i] = (ztz2[i]*np.ones(rData[i].shape)).T
+    
 ############################## BOUNDARY CONDITION ###############################
 
 

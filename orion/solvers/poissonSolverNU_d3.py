@@ -160,6 +160,111 @@ def v_cycle():
         # Post-smoothing
         smooth(gv.pstSm)
 
+def vectorJacobi3D3RedUpdate(p, r, ic1, ic2, ia1, ia2):
+    
+    jFactor3D = 2*((xix2[vLev][ia1, ia1, ia1]/hx2[vLev]) + (ety2[vLev][ia1, ia1, ia1]/hy2[vLev]) + (ztz2[vLev][ia1, ia1, ia1]/hz2[vLev]))
+    p[ic1, ic1, ic1] = (-r[ia1, ia1, ia1] + \
+                        (p[ia1, ic1, ic1][1:, :, :] + p[ia1, ic1, ic1][:-1, :, :])*(xix2[vLev][ia1, ia1, ia1]/hx2[vLev]) + \
+                        (p[ia1, ic1, ic1][1:, :, :] - p[ia1, ic1, ic1][:-1, :, :])*(xixx[vLev][ia1, ia1, ia1]/(2*hx[vLev])) + \
+                        (p[ic1, ia1, ic1][:, 1:, :] + p[ic1, ia1, ic1][:, :-1, :])*(ety2[vLev][ia1, ia1, ia1]/hy2[vLev]) + \
+                        (p[ic1, ia1, ic1][:, 1:, :] - p[ic1, ia1, ic1][:, :-1, :])*(etyy[vLev][ia1, ia1, ia1]/(2*hy[vLev])) + \
+                        (p[ic1, ic1, ia1][:, :, 1:] + p[ic1, ic1, ia1][:, :, :-1])*(ztz2[vLev][ia1, ia1, ia1]/hz2[vLev]) + \
+                        (p[ic1, ic1, ia1][:, :, 1:] - p[ic1, ic1, ia1][:, :, :-1])*(ztzz[vLev][ia1, ia1, ia1]/(2*hz[vLev])))* \
+                        (1/jFactor3D)
+    
+    jFactor3D = 2*((xix2[vLev][ia1, ia2, ia2]/hx2[vLev]) + (ety2[vLev][ia1, ia2, ia2]/hy2[vLev]) + (ztz2[vLev][ia1, ia2, ia2]/hz2[vLev]))
+    p[ic1, ic2, ic2] = (-r[ia1, ia2, ia2] + \
+                        (p[ia1, ic2, ic2][1:, :, :] + p[ia1, ic2, ic2][:-1, :, :])*(xix2[vLev][ia1, ia2, ia2]/hx2[vLev]) + \
+                        (p[ia1, ic2, ic2][1:, :, :] - p[ia1, ic2, ic2][:-1, :, :])*(xixx[vLev][ia1, ia2, ia2]/(2*hx[vLev])) + \
+                        (p[ic1, ia2, ic2][:, 1:, :] + p[ic1, ia2, ic2][:, :-1, :])*(ety2[vLev][ia1, ia2, ia2]/hy2[vLev]) + \
+                        (p[ic1, ia2, ic2][:, 1:, :] - p[ic1, ia2, ic2][:, :-1, :])*(etyy[vLev][ia1, ia2, ia2]/(2*hy[vLev])) + \
+                        (p[ic1, ic2, ia2][:, :, 1:] + p[ic1, ic2, ia2][:, :, :-1])*(ztz2[vLev][ia1, ia2, ia2]/hz2[vLev]) + \
+                        (p[ic1, ic2, ia2][:, :, 1:] - p[ic1, ic2, ia2][:, :, :-1])*(ztzz[vLev][ia1, ia2, ia2]/(2*hz[vLev])))* \
+                        (1/jFactor3D)
+
+    jFactor3D = 2*((xix2[vLev][ia2, ia1, ia2]/hx2[vLev]) + (ety2[vLev][ia2, ia1, ia2]/hy2[vLev]) + (ztz2[vLev][ia2, ia1, ia2]/hz2[vLev]))
+    p[ic2, ic1, ic2] = (-r[ia2, ia1, ia2] + \
+                        (p[ia2, ic1, ic2][1:, :, :] + p[ia2, ic1, ic2][:-1, :, :])*(xix2[vLev][ia2, ia1, ia2]/hx2[vLev]) + \
+                        (p[ia2, ic1, ic2][1:, :, :] - p[ia2, ic1, ic2][:-1, :, :])*(xixx[vLev][ia2, ia1, ia2]/(2*hx[vLev])) + \
+                        (p[ic2, ia1, ic2][:, 1:, :] + p[ic2, ia1, ic2][:, :-1, :])*(ety2[vLev][ia2, ia1, ia2]/hy2[vLev]) + \
+                        (p[ic2, ia1, ic2][:, 1:, :] - p[ic2, ia1, ic2][:, :-1, :])*(etyy[vLev][ia2, ia1, ia2]/(2*hy[vLev])) + \
+                        (p[ic2, ic1, ia2][:, :, 1:] + p[ic2, ic1, ia2][:, :, :-1])*(ztz2[vLev][ia2, ia1, ia2]/hz2[vLev]) + \
+                        (p[ic2, ic1, ia2][:, :, 1:] - p[ic2, ic1, ia2][:, :, :-1])*(ztzz[vLev][ia2, ia1, ia2]/(2*hz[vLev])))* \
+                        (1/jFactor3D)
+    
+    jFactor3D = 2*((xix2[vLev][ia2, ia2, ia1]/hx2[vLev]) + (ety2[vLev][ia2, ia2, ia1]/hy2[vLev]) + (ztz2[vLev][ia2, ia2, ia1]/hz2[vLev]))
+    p[ic2, ic2, ic1] = (-r[ia2, ia2, ia1] + \
+                        (p[ia2, ic2, ic1][1:, :, :] + p[ia2, ic2, ic1][:-1, :, :])*(xix2[vLev][ia2, ia2, ia1]/hx2[vLev]) + \
+                        (p[ia2, ic2, ic1][1:, :, :] - p[ia2, ic2, ic1][:-1, :, :])*(xixx[vLev][ia2, ia2, ia1]/(2*hx[vLev])) + \
+                        (p[ic2, ia2, ic1][:, 1:, :] + p[ic2, ia2, ic1][:, :-1, :])*(ety2[vLev][ia2, ia2, ia1]/hy2[vLev]) + \
+                        (p[ic2, ia2, ic1][:, 1:, :] - p[ic2, ia2, ic1][:, :-1, :])*(etyy[vLev][ia2, ia2, ia1]/(2*hy[vLev])) + \
+                        (p[ic2, ic2, ia1][:, :, 1:] + p[ic2, ic2, ia1][:, :, :-1])*(ztz2[vLev][ia2, ia2, ia1]/hz2[vLev]) + \
+                        (p[ic2, ic2, ia1][:, :, 1:] - p[ic2, ic2, ia1][:, :, :-1])*(ztzz[vLev][ia2, ia2, ia1]/(2*hz[vLev])))* \
+                        (1/jFactor3D)
+    return p
+
+def vectorJacobi3D3BlackUpdate(p, r, ic1, ic2, ia1, ia2):
+    
+    jFactor3D = 2*((xix2[vLev][ia2, ia2, ia2]/hx2[vLev]) + (ety2[vLev][ia2, ia2, ia2]/hy2[vLev]) + (ztz2[vLev][ia2, ia2, ia2]/hz2[vLev]))
+    p[ic2, ic2, ic2] = (-r[ia2, ia2, ia2] + \
+                        (p[ia2, ic2, ic2][1:, :, :] + p[ia2, ic2, ic2][:-1, :, :])*(xix2[vLev][ia2, ia2, ia2]/hx2[vLev]) + \
+                        (p[ia2, ic2, ic2][1:, :, :] - p[ia2, ic2, ic2][:-1, :, :])*(xixx[vLev][ia2, ia2, ia2]/(2*hx[vLev])) + \
+                        (p[ic2, ia2, ic2][:, 1:, :] + p[ic2, ia2, ic2][:, :-1, :])*(ety2[vLev][ia2, ia2, ia2]/hy2[vLev]) + \
+                        (p[ic2, ia2, ic2][:, 1:, :] - p[ic2, ia2, ic2][:, :-1, :])*(etyy[vLev][ia2, ia2, ia2]/(2*hy[vLev])) + \
+                        (p[ic2, ic2, ia2][:, :, 1:] + p[ic2, ic2, ia2][:, :, :-1])*(ztz2[vLev][ia2, ia2, ia2]/hz2[vLev]) + \
+                        (p[ic2, ic2, ia2][:, :, 1:] - p[ic2, ic2, ia2][:, :, :-1])*(ztzz[vLev][ia2, ia2, ia2]/(2*hz[vLev])))* \
+                        (1/jFactor3D)
+    
+    jFactor3D = 2*((xix2[vLev][ia2, ia1, ia1]/hx2[vLev]) + (ety2[vLev][ia2, ia1, ia1]/hy2[vLev]) + (ztz2[vLev][ia2, ia1, ia1]/hz2[vLev]))
+    p[ic2, ic1, ic1] = (-r[ia2, ia1, ia1] + \
+                        (p[ia2, ic1, ic1][1:, :, :] + p[ia2, ic1, ic1][:-1, :, :])*(xix2[vLev][ia2, ia1, ia1]/hx2[vLev]) + \
+                        (p[ia2, ic1, ic1][1:, :, :] - p[ia2, ic1, ic1][:-1, :, :])*(xixx[vLev][ia2, ia1, ia1]/(2*hx[vLev])) + \
+                        (p[ic2, ia1, ic1][:, 1:, :] + p[ic2, ia1, ic1][:, :-1, :])*(ety2[vLev][ia2, ia1, ia1]/hy2[vLev]) + \
+                        (p[ic2, ia1, ic1][:, 1:, :] - p[ic2, ia1, ic1][:, :-1, :])*(etyy[vLev][ia2, ia1, ia1]/(2*hy[vLev])) + \
+                        (p[ic2, ic1, ia1][:, :, 1:] + p[ic2, ic1, ia1][:, :, :-1])*(ztz2[vLev][ia2, ia1, ia1]/hz2[vLev]) + \
+                        (p[ic2, ic1, ia1][:, :, 1:] - p[ic2, ic1, ia1][:, :, :-1])*(ztzz[vLev][ia2, ia1, ia1]/(2*hz[vLev])))* \
+                        (1/jFactor3D)
+    
+    jFactor3D = 2*((xix2[vLev][ia1, ia2, ia1]/hx2[vLev]) + (ety2[vLev][ia1, ia2, ia1]/hy2[vLev]) + (ztz2[vLev][ia1, ia2, ia1]/hz2[vLev]))
+    p[ic1, ic2, ic1] = (-r[ia1, ia2, ia1] + \
+                        (p[ia1, ic2, ic1][1:, :, :] + p[ia1, ic2, ic1][:-1, :, :])*(xix2[vLev][ia1, ia2, ia1]/hx2[vLev]) + \
+                        (p[ia1, ic2, ic1][1:, :, :] - p[ia1, ic2, ic1][:-1, :, :])*(xixx[vLev][ia1, ia2, ia1]/(2*hx[vLev])) + \
+                        (p[ic1, ia2, ic1][:, 1:, :] + p[ic1, ia2, ic1][:, :-1, :])*(ety2[vLev][ia1, ia2, ia1]/hy2[vLev]) + \
+                        (p[ic1, ia2, ic1][:, 1:, :] - p[ic1, ia2, ic1][:, :-1, :])*(etyy[vLev][ia1, ia2, ia1]/(2*hy[vLev])) + \
+                        (p[ic1, ic2, ia1][:, :, 1:] + p[ic1, ic2, ia1][:, :, :-1])*(ztz2[vLev][ia1, ia2, ia1]/hz2[vLev]) + \
+                        (p[ic1, ic2, ia1][:, :, 1:] - p[ic1, ic2, ia1][:, :, :-1])*(ztzz[vLev][ia1, ia2, ia1]/(2*hz[vLev])))* \
+                        (1/jFactor3D)
+    
+    jFactor3D = 2*((xix2[vLev][ia1, ia1, ia2]/hx2[vLev]) + (ety2[vLev][ia1, ia1, ia2]/hy2[vLev]) + (ztz2[vLev][ia1, ia1, ia2]/hz2[vLev]))
+    p[ic1, ic1, ic2] = (-r[ia1, ia1, ia2] + \
+                        (p[ia1, ic1, ic2][1:, :, :] + p[ia1, ic1, ic2][:-1, :, :])*(xix2[vLev][ia1, ia1, ia2]/hx2[vLev]) + \
+                        (p[ia1, ic1, ic2][1:, :, :] - p[ia1, ic1, ic2][:-1, :, :])*(xixx[vLev][ia1, ia1, ia2]/(2*hx[vLev])) + \
+                        (p[ic1, ia1, ic2][:, 1:, :] + p[ic1, ia1, ic2][:, :-1, :])*(ety2[vLev][ia1, ia1, ia2]/hy2[vLev]) + \
+                        (p[ic1, ia1, ic2][:, 1:, :] - p[ic1, ia1, ic2][:, :-1, :])*(etyy[vLev][ia1, ia1, ia2]/(2*hy[vLev])) + \
+                        (p[ic1, ic1, ia2][:, :, 1:] + p[ic1, ic1, ia2][:, :, :-1])*(ztz2[vLev][ia1, ia1, ia2]/hz2[vLev]) + \
+                        (p[ic1, ic1, ia2][:, :, 1:] - p[ic1, ic1, ia2][:, :, :-1])*(ztzz[vLev][ia1, ia1, ia2]/(2*hz[vLev])))* \
+                        (1/jFactor3D)
+
+    return p
+
+def vectorJacobi3D_RBGS(p, r):
+    #Performs 1 iteration of the Jacobi method
+    #Vectorized Form
+    
+    # p is n x n x n
+    # r is n x n x n
+    #Assumes p and rhs have boundaries 
+  
+    ic1 = slice(1, -1, 2)
+    ic2 = slice(2, -2, 2)
+    ia1 = slice(0, None, 2)  
+    ia2 = slice(1, -1, 2)
+    #Red
+    p = vectorJacobi3D3RedUpdate(p, r, ic1, ic2, ia1, ia2)
+    #Black
+    p = vectorJacobi3D3BlackUpdate(p, r, ic1, ic2, ia1, ia2)
+    
+    return p
 
 # Smoothens the solution sCount times using Gauss-Seidel smoother
 def smooth(sCount):
@@ -172,20 +277,24 @@ def smooth(sCount):
     n = N[vLev]
     for iCnt in range(sCount):
         imposeBC(pData[vLev])
-
-        # Gauss-Seidel smoothing
-        for i in range(1, n[0]+1):
-            for j in range(1, n[1]+1):
-                for k in range(1, n[2]+1):
-                    pData[vLev][i, j, k] = (
-                        hyhz[vLev]*xix2[vLev][i-1]*(pData[vLev][i+1, j, k] + pData[vLev][i-1, j, k])*2.0 +
-                        hyhz[vLev]*xixx[vLev][i-1]*(pData[vLev][i+1, j, k] - pData[vLev][i-1, j, k])*hx[vLev] +
-                        hzhx[vLev]*ety2[vLev][j-1]*(pData[vLev][i, j+1, k] + pData[vLev][i, j-1, k])*2.0 +
-                        hzhx[vLev]*etyy[vLev][j-1]*(pData[vLev][i, j+1, k] - pData[vLev][i, j-1, k])*hy[vLev] +
-                        hxhy[vLev]*ztz2[vLev][k-1]*(pData[vLev][i, j, k+1] + pData[vLev][i, j, k-1])*2.0 +
-                        hxhy[vLev]*ztzz[vLev][k-1]*(pData[vLev][i, j, k+1] - pData[vLev][i, j, k-1])*hz[vLev] -
-                    2.0*hxhyhz[vLev]*rData[vLev][i-1, j-1, k-1]) / \
-                (4.0*(hyhz[vLev]*xix2[vLev][i-1] + hzhx[vLev]*ety2[vLev][j-1] + hxhy[vLev]*ztz2[vLev][k-1]))
+        
+        if gv.solveMethod == "MG-GS":
+            # Gauss-Seidel smoothing
+            for i in range(1, n[0]+1):
+                for j in range(1, n[1]+1):
+                    for k in range(1, n[2]+1):
+                        pData[vLev][i, j, k] = (
+                                hyhz[vLev]*xix2[vLev][i-1]*(pData[vLev][i+1, j, k] + pData[vLev][i-1, j, k])*2.0 +
+                                hyhz[vLev]*xixx[vLev][i-1]*(pData[vLev][i+1, j, k] - pData[vLev][i-1, j, k])*hx[vLev] +
+                                hzhx[vLev]*ety2[vLev][j-1]*(pData[vLev][i, j+1, k] + pData[vLev][i, j-1, k])*2.0 +
+                                hzhx[vLev]*etyy[vLev][j-1]*(pData[vLev][i, j+1, k] - pData[vLev][i, j-1, k])*hy[vLev] +
+                                hxhy[vLev]*ztz2[vLev][k-1]*(pData[vLev][i, j, k+1] + pData[vLev][i, j, k-1])*2.0 +
+                                hxhy[vLev]*ztzz[vLev][k-1]*(pData[vLev][i, j, k+1] - pData[vLev][i, j, k-1])*hz[vLev] -
+                                2.0*hxhyhz[vLev]*rData[vLev][i-1, j-1, k-1]) / \
+                                (4.0*(hyhz[vLev]*xix2[vLev][i-1] + hzhx[vLev]*ety2[vLev][j-1] + hxhy[vLev]*ztz2[vLev][k-1]))
+        
+        if gv.solveMethod == "MG-RBGS":
+            pData[vLev] = vectorJacobi3D_RBGS(pData[vLev],rData[vLev])
 
     imposeBC(pData[vLev])
 
@@ -417,10 +526,28 @@ def initGrid():
     xixx = [x[:, np.newaxis, np.newaxis] for x in xixx]
     xix2 = [x[:, np.newaxis, np.newaxis] for x in xix2]
 
-    etyy = [x[:, np.newaxis] for x in etyy]
-    ety2 = [x[:, np.newaxis] for x in ety2]
+    if gv.solveMethod == "MG-GS":
+        etyy = [x[:, np.newaxis] for x in etyy]
+        ety2 = [x[:, np.newaxis] for x in ety2]
 
+    if gv.solveMethod == "MG-RBGS":
+    #Reshaping arrays for RBGS
+        etyy = [x[np.newaxis, :, np.newaxis] for x in etyy]
+        ety2 = [x[np.newaxis, :, np.newaxis] for x in ety2]
 
+        ztzz = [x[np.newaxis, np.newaxis, :] for x in ztzz]
+        ztz2 = [x[np.newaxis, np.newaxis, :] for x in ztz2]
+    
+        for i in range(len(rData)):
+            xixx[i] = (xixx[i]*np.ones(rData[i].shape))
+            xix2[i] = (xix2[i]*np.ones(rData[i].shape))
+            
+            etyy[i] = (etyy[i]*np.ones(rData[i].shape))
+            ety2[i] = (ety2[i]*np.ones(rData[i].shape))
+            
+            ztzz[i] = (ztzz[i]*np.ones(rData[i].shape))
+            ztz2[i] = (ztz2[i]*np.ones(rData[i].shape))
+            
 ############################## BOUNDARY CONDITION ###############################
 
 

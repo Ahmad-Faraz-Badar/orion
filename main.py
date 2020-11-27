@@ -108,7 +108,7 @@ def timeIntegrate():
         maxDiv = fs.getDiv()
         if maxDiv[1] > 10.0:
             print("ERROR: Divergence has exceeded permissible limits. Aborting")
-            quit()
+            #quit()
 
         gv.iCnt += 1
         ndTime += gv.dt

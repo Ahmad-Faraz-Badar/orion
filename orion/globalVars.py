@@ -38,10 +38,10 @@ import numpy as np
 
 # Set whether the simulation is going to be 2D or 3D
 # If 2D, set the below flag to True
-planar = True
+planar = False
 
 # Set below flag to True if the Poisson solver is being tested
-testPoisson = True
+testPoisson = False
 
 # Set the number of processors for parallel computing (under development) with multiprocessing module
 nProcs = 1
@@ -55,7 +55,7 @@ sInd = np.array([5, 5, 5])
 dLen = [1.0, 1.0, 1.0]
 
 # Turn below flag on when using uniform grid
-uniformGrid = True
+uniformGrid = False
 
 # If above flag is True, set tangent-hyperbolic stretching factors along X, Y and Z directions respectively
 beta = [1.0, 1.0, 1.0]
@@ -72,10 +72,10 @@ xyPeriodic = False
 fwMode = "HDF5"
 
 # Time-step
-dt = 0.01
+dt = 0.001
 
 # Final time
-tMax = 0.5
+tMax = 0.1
 
 # Number of iterations after which output must be printed to standard I/O
 opInt = 1
@@ -104,13 +104,13 @@ solveMethod = solveMethods[solveMethod]
 VDepth = 4
 
 # Number of V-cycles to be computed
-vcCnt = 14
+vcCnt = 7
 
 # Number of iterations during pre-smoothing
-preSm = 2
+preSm = 3
 
 # Number of iterations during post-smoothing
-pstSm = 2
+pstSm = 3
 
 ######################################## END OF USER PARAMETERS ####################################
 
